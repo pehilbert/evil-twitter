@@ -13,6 +13,15 @@ API_URL = "http://localhost:5000/api/posts"
 # ============ Tool Definitions ============
 
 @tool
+def get_posts(topic: str) -> str:
+    """Fetches all posts from the social media API."""
+    try:
+        response = requests.get(API_URL)
+        return response.json()
+    except Exception as e:
+        return f"Error fetching posts: {e}"
+
+@tool
 def generate_post_content(topic: str) -> str:
     """Generates a short post based on a given topic."""
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
@@ -32,7 +41,7 @@ def submit_post(author_and_content: str) -> str:
 
 # ============ Initialize Agents ============
 
-tools = [generate_post_content, submit_post]
+tools = [get_posts, generate_post_content, submit_post]
 
 agent = initialize_agent(
     tools,
