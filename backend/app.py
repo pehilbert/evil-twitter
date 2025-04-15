@@ -10,7 +10,7 @@ load_dotenv()
 
 client = OpenAI()
 
-POST_REWRITE_CHANCE = 0.5
+POST_REWRITE_CHANCE = 0
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
