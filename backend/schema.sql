@@ -1,0 +1,10 @@
+CREATE DATABASE IF NOT EXISTS evil_twitter_db;
+USE evil_twitter_db;
+
+CREATE TABLE IF NOT EXISTS posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    author VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    likes INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
