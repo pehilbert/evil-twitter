@@ -4,8 +4,8 @@ from datetime import datetime
 
 # Database configuration
 config = {
-    'user': 'root',
-    'password': 'ThePassword123!',
+    'user': 'new_user',
+    'password': 'new_password',
     'host': 'localhost',
     'raise_on_warnings': True
 }
@@ -27,9 +27,12 @@ def initialize_database():
     cursor = None
 
     try:
-        # Connect to the MySQL database
+        # Connect to the MySQL server
         cnx = mysql.connector.connect(**config)
         cursor = cnx.cursor()
+
+        # Explicitly set the database to use
+        cursor.execute("USE evil_twitter_db;")
 
         # Execute each statement individually
         for statement in statements:
@@ -41,12 +44,7 @@ def initialize_database():
         print("Database initialized successfully.")
 
     except mysql.connector.Error as err:
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            print("Something is wrong with your user name or password")
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            print("Database does not exist")
-        else:
-            print("Something went wrong with database initialization:", err)
+        print(f"Something went wrong with database initialization: {err}")
     finally:
         if cursor:
             cursor.close()
@@ -126,6 +124,55 @@ def increment_likes(post_id):
         cursor.execute(query, (post_id,))
         cnx.commit()
         print(f"Likes incremented for post ID {post_id}.")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+    finally:
+        cursor.close()
+        cnx.close()
+
+def add_reply(post_id, author, content):
+    """Add a new reply to a specific post."""
+    try:
+        print(f"Trying to add reply to post ID {post_id} by {author} with content: {content}")
+        cnx = mysql.connector.connect(**initialized_config)
+        cursor = cnx.cursor()
+        query = ("INSERT INTO replies (post_id, author, content) "
+                 "VALUES (%s, %s, %s)")
+        data = (post_id, author, content)
+        cursor.execute(query, data)
+        cnx.commit()
+        print("Reply added successfully.")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+    finally:
+        cursor.close()
+        cnx.close()
+
+def get_replies(post_id):
+    """Retrieve all replies for a specific post."""
+    try:
+        cnx = mysql.connector.connect(**initialized_config)
+        cursor = cnx.cursor(dictionary=True)
+        query = "SELECT id, post_id, author, content, created_at FROM replies WHERE post_id = %s"
+        cursor.execute(query, (post_id,))
+        replies = cursor.fetchall()
+        return replies
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return []
+    finally:
+        cursor.close()
+        cnx.close()
+
+def delete_reply(reply_id):
+    """Delete a reply from the database by ID."""
+    try:
+        cnx = mysql.connector.connect(**initialized_config)
+        cursor = cnx.cursor()
+        query = "DELETE FROM replies WHERE id = %s"
+        cursor.execute(query, (reply_id,))
+        cnx.commit()
+        print(f"Reply ID {reply_id} deleted successfully.")
     except mysql.connector.Error as err:
         print(f"Error: {err}")
     finally:

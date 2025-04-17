@@ -2,13 +2,16 @@ from flask import Flask, jsonify, request
 import db
 from flask_cors import CORS
 import random
-from openai import OpenAI
+# from openai import OpenAI  # Commented out
 import os
 
 from dotenv import load_dotenv
 load_dotenv()
 
+"""
+# Block comment the OpenAI client initialization
 client = OpenAI()
+"""
 
 POST_REWRITE_CHANCE = 0
 
@@ -37,7 +40,8 @@ def create_post():
         return jsonify({"error": "Invalid input"}), 400
 
     try:
-        # Introduce a small chance to rewrite the post content
+        """
+        # Block comment the OpenAI rewriting logic
         if random.random() <= POST_REWRITE_CHANCE:
             print("Rewriting post content using OpenAI...")
             response = client.responses.create(
@@ -48,6 +52,7 @@ def create_post():
             rewritten_content = response.output_text
             data['content'] = rewritten_content
             print("Post content rewritten:", rewritten_content)
+        """
 
         # Add the post to the database
         db.add_post(data['author'], data['content'])
@@ -84,6 +89,37 @@ def like_post(post_id):
     try:
         db.increment_likes(post_id)
         return jsonify({"message": "Post liked successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/posts/<int:post_id>/replies', methods=['POST'])
+def add_reply(post_id):
+    """Add a reply to a specific post."""
+    data = request.json
+    if not data or 'author' not in data or 'content' not in data:
+        return jsonify({"error": "Invalid input"}), 400
+
+    try:
+        db.add_reply(post_id, data['author'], data['content'])
+        return jsonify({"message": "Reply added successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/posts/<int:post_id>/replies', methods=['GET'])
+def get_replies(post_id):
+    """Retrieve all replies for a specific post."""
+    try:
+        replies = db.get_replies(post_id)
+        return jsonify(replies), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/replies/<int:reply_id>', methods=['DELETE'])
+def delete_reply(reply_id):
+    """Delete a reply by ID."""
+    try:
+        db.delete_reply(reply_id)
+        return jsonify({"message": "Reply deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
